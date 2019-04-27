@@ -1,15 +1,16 @@
 import random
 from collections import deque, namedtuple
-from pprint import pprint
 from typing import List, Tuple
 
-from board import *
+from board.base_board import *
 
 
 Move = namedtuple('Move', ['board_idx', 'move_idx'])
 
 
 class UltimateBoard(BaseBoard):
+    """Board implementation for ultimate tic tac toe. Supports any NxN size board."""
+
     def __init__(self):
         self.pos = [Board() for _ in range(BOARD_SIZE)]
         # indicates where (which board) the next move should be done
@@ -66,6 +67,7 @@ class UltimateBoard(BaseBoard):
 
                     self.pos[board].make_move(move, self.playerJustMoved)
                     self.history.append(Move(board_idx=board, move_idx=move))
+                    # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
                     self.nextBoard = move  # the move on the board represents the next board
                     return
 
@@ -73,18 +75,21 @@ class UltimateBoard(BaseBoard):
             # must be played on it
             self.pos[self.nextBoard].make_move(move, self.playerJustMoved)
             self.history.append(Move(board_idx=self.nextBoard, move_idx=move))
+            # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
             self.nextBoard = move
             return
 
         # if board is not None but nextBoard is None (i.e. start of game)
         self.pos[board].make_move(move, self.playerJustMoved)
         self.history.append(Move(board_idx=board, move_idx=move))
+        # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
         self.nextBoard = move
 
     def take_move(self):
         move = self.history.pop()
         self.pos[move.board_idx].take_move(move.move_idx)
-        # todo need to update self.nextBoard
+        # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
+        self.nextBoard = move.board_idx  # update nextBoard to be the one forced
 
     def get_all_moves(self) -> List[Tuple[int, int]]:
         """Get all possible moves in the form of a list of tuples
@@ -130,7 +135,7 @@ class UltimateBoard(BaseBoard):
 
         return all_moves
 
-    def get_result(self, player_jm):  # todo use player_jm instead of self.
+    def get_result(self, player_jm):
         # build a list containing the results from each individual board
         # where there is no result i.e. None => replace with 0
         result_board = [board.get_result() for board in self.pos]
@@ -144,7 +149,7 @@ class UltimateBoard(BaseBoard):
             # if there is no winner and no available moves => DRAW
             return DRAW
         elif result in (self.playerJustMoved, -self.playerJustMoved):
-            return WIN if result == self.playerJustMoved else LOSS
+            return WIN if result == player_jm else LOSS
 
 
 if __name__ == '__main__':
@@ -153,10 +158,10 @@ if __name__ == '__main__':
     print('\n\n')
     player = -ub.playerJustMoved
     while ub.get_result(ub.playerJustMoved) is None:
-        moves = ub.get_moves()
-        board, move = random.choice(moves)
-        print(board, move)
-        ub.make_move(move, board)
+        moves_list = ub.get_moves()
+        target_board, move_idx = random.choice(moves_list)
+        print(target_board, move_idx)
+        ub.make_move(move_idx, target_board)
         print(ub)
         print('\n\n')
 

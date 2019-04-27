@@ -1,24 +1,9 @@
-PLAYER_X = 1
-PLAYER_O = -1
-NO_PLAYER = 0
-
-STR_MATRIX = {
-    PLAYER_X: 'X',
-    PLAYER_O: 'O',
-    NO_PLAYER: '-'
-}
-
-ROWS = 3
-BOARD_SIZE = ROWS*ROWS
-
-LOSS = 0.0
-DRAW = 0.5
-WIN = 1.0
+from board.constants import *
 
 
 class BaseBoard:
     """Defines the general structure which a board implementation
-    must implement
+    must implement in order to be compatible with the MCTS game engine
     """
 
     def __str__(self):
@@ -41,6 +26,8 @@ class BaseBoard:
 
 
 class Board:
+    """Board implementation for a single NxN board"""
+
     def __init__(self):
         self.pos = [0] * BOARD_SIZE
 
