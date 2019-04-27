@@ -36,7 +36,7 @@ class UltimateBoard(BaseBoard):
         _b.history = self.history.copy()
         return _b
 
-    def make_move(self, move: int, board: int = None):
+    def make_move(self, move: int, board: int = None):  # todo split in handlers depending on nextBoard and board values
         """Make a move to the specified board, if no board is specified
         the move is done on the board indicated by nextBoard i.e forced
         by the last played move.
@@ -51,6 +51,21 @@ class UltimateBoard(BaseBoard):
             return
 
         if self.nextBoard is not None:
+            # handle case when you can play on any board
+            if self.nextBoard == ANY_BOARD and board is None:
+                print('You need to provide a board to your move on since no forced board exists')
+                return
+            elif self.nextBoard == ANY_BOARD and board is not None:
+                if self.pos[board].get_result() is not None:
+                    print('You need to provide a board that does not yet have a result.')
+                    return
+                else:
+                    self.pos[board].make_move(move, self.playerJustMoved)
+                    self.history.append(Move(board_idx=board, move_idx=move))
+                    # the move on the board represents the next board
+                    self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
+                    return
+
             # if we are forced to play on a board (due to opponents move)
             # check if nextBoard has a winner. If it does => player should
             # have picked a new board to play on
@@ -67,28 +82,27 @@ class UltimateBoard(BaseBoard):
 
                     self.pos[board].make_move(move, self.playerJustMoved)
                     self.history.append(Move(board_idx=board, move_idx=move))
-                    # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
-                    self.nextBoard = move  # the move on the board represents the next board
+                    # the move on the board represents the next board
+                    self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
                     return
 
             # otherwise the forced board, doesn't have a result and the new move
             # must be played on it
             self.pos[self.nextBoard].make_move(move, self.playerJustMoved)
             self.history.append(Move(board_idx=self.nextBoard, move_idx=move))
-            # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
-            self.nextBoard = move
+            # the move on the board represents the next board
+            self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
             return
 
         # if board is not None but nextBoard is None (i.e. start of game)
         self.pos[board].make_move(move, self.playerJustMoved)
         self.history.append(Move(board_idx=board, move_idx=move))
-        # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
-        self.nextBoard = move
+        # the move on the board represents the next board
+        self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
 
     def take_move(self):
         move = self.history.pop()
         self.pos[move.board_idx].take_move(move.move_idx)
-        # todo if nextBoard points to a board that is already final => nextBoard could be all available boards
         self.nextBoard = move.board_idx  # update nextBoard to be the one forced
 
     def get_all_moves(self) -> List[Tuple[int, int]]:
@@ -101,8 +115,7 @@ class UltimateBoard(BaseBoard):
                 continue
 
             moves = board.get_moves()
-            if moves:
-                all_moves.extend(zip([idx]*len(moves), moves))
+            all_moves.extend(zip([idx]*len(moves), moves))
         return all_moves
 
     def get_moves(self):
@@ -117,23 +130,20 @@ class UltimateBoard(BaseBoard):
 
         # if a forced board has a result -> return list of moves for
         # all other boards that do not yet have a result
-        if self.pos[self.nextBoard].get_result() is not None:
+        elif self.nextBoard == ANY_BOARD:
             all_moves = []
             for idx, board in enumerate(self.pos):
-                if idx != self.nextBoard and board.get_result() is None:
+                if board.get_result() is None:
                     moves = board.get_moves()
-                    if moves:
-                        all_moves.extend(zip([idx] * len(moves), moves))
+                    all_moves.extend(zip([idx] * len(moves), moves))
             return all_moves
 
         # if forced board doesn't have a result yet => get all possible moves
         # from that board
-        all_moves = []
-        moves = self.pos[self.nextBoard].get_moves()
-        if moves:
-            all_moves.extend(zip([self.nextBoard] * len(moves), moves))
-
-        return all_moves
+        else:
+            moves = self.pos[self.nextBoard].get_moves()
+            all_moves = list(zip([self.nextBoard] * len(moves), moves))
+            return all_moves
 
     def get_result(self, player_jm):
         # build a list containing the results from each individual board
@@ -161,6 +171,10 @@ if __name__ == '__main__':
         moves_list = ub.get_moves()
         target_board, move_idx = random.choice(moves_list)
         print(target_board, move_idx)
+        # user_input = input('Enter board move:')
+        # user_input.strip()
+        # user_input = user_input.split(' ')
+        # target_board, move_idx = int(user_input[0]), int(user_input[1])
         ub.make_move(move_idx, target_board)
         print(ub)
         print('\n\n')

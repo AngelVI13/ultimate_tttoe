@@ -14,6 +14,7 @@ STR_MATRIX = {
 
 ROWS = 3
 BOARD_SIZE = ROWS*ROWS
+ANY_BOARD = BOARD_SIZE + 1  # Indicates when the player is able to choose any board to play on
 
 LOSS = 0.0
 DRAW = 0.5
