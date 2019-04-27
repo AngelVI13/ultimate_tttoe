@@ -1,44 +1,19 @@
-# tutorial from https://pythonprogramming.net/drawing-objects-pygame-tutorial/?completed=/displaying-text-pygame-screen/
 import pygame
-from gui.colors import *
+from gui.constants import *
 from board.ultimate_board import *
 
 
 class GuiBoard:
-    display_width = 600
-    display_height = 600
-    board_width = 480
-    board_height = 480
     colors = {
         PLAYER_X: RED,
         PLAYER_O: BLUE,
     }
 
-    border_thickness = 2
-    borders = {
-        'top_left': (border_thickness, border_thickness, -border_thickness, -border_thickness),
-        'top_right': (0, border_thickness, -border_thickness, -border_thickness),
-        'bottom_left': (border_thickness, 0, -border_thickness, -border_thickness),
-        'bottom_right': (0, 0, -border_thickness, -border_thickness),
-        'u_shape': (border_thickness, 0, -2 * border_thickness, -border_thickness),
-        'n_shape': (border_thickness, border_thickness, -2 * border_thickness, -border_thickness),
-        'o_shape': (border_thickness, border_thickness, -2 * border_thickness, -2 * border_thickness),
-        ']_shape': (0, border_thickness, -border_thickness, -2 * border_thickness),
-        '[_shape': (border_thickness, border_thickness, -border_thickness, -2 * border_thickness),
-    }
-
     clicked_cells = []
-    sub_grid_padding = 11
-    main_box_width = board_width / 3
-    main_box_height = board_height / 3
-    cell_width = main_box_width / 3
-    cell_height = main_box_height / 3
-    # offset for main grid from main window
-    offset_x, offset_y = (display_width - board_width) / 2, (display_height - board_height) / 2
 
     def __init__(self):
         pygame.init()
-        self.gameDisplay = pygame.display.set_mode((self.display_width, self.display_height))
+        self.gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
         pygame.display.set_caption('Ultimate Tic Tac Toe')
         self.clock = pygame.time.Clock()
 
@@ -52,7 +27,7 @@ class GuiBoard:
     def message_display(self, text):
         large_text = pygame.font.Font('freesansbold.ttf', 115)
         text_surf, text_rect = self.get_text_objects(text, large_text)
-        text_rect.center = ((self.display_width / 2), (self.display_height / 2))
+        text_rect.center = ((DISPLAY_WIDTH / 2), (DISPLAY_HEIGHT / 2))
         self.gameDisplay.blit(text_surf, text_rect)
         pygame.display.update()
 
@@ -79,103 +54,64 @@ class GuiBoard:
         quit()
 
     def draw_subcell(self, border, border_colour, box_colour, highlight_colour, x, y, w, h, action=None):
-        try:
-            mod_x, mod_y, mod_w, mod_h = self.borders[border]
-        except KeyError:
-            raise
+        # Draw bounding box of cell
+        mod_x, mod_y, mod_w, mod_h = BORDERS[border]
+        pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
+
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+        inner_x, inner_y, inner_w, inner_h = x + mod_x, y + mod_y, w + mod_w, h + mod_h
+
+        if x + w > mouse[0] > x and y + h > mouse[1] > y:
+            pygame.draw.rect(self.gameDisplay, highlight_colour, (inner_x, inner_y, inner_w, inner_h))
+
+            if click[0] == 1 and action is not None:
+                action(inner_x, inner_y, inner_w, inner_h)
         else:
-            pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
-            # pygame.draw.rect(self.gameDisplay, box_colour, (x+mod_x, y+mod_y, w+mod_w, h+mod_h))
-
-            mouse = pygame.mouse.get_pos()
-            click = pygame.mouse.get_pressed()
-            # print(click)
-            # print(mouse, x, y, w, h)
-            if x + w > mouse[0] > x and y + h > mouse[1] > y:
-                pygame.draw.rect(self.gameDisplay, highlight_colour, (x + mod_x, y + mod_y, w + mod_w, h + mod_h))
-
-                if click[0] == 1 and action is not None:
-                    action(x + mod_x, y + mod_y, w + mod_w, h + mod_h)
-            else:
-                pygame.draw.rect(self.gameDisplay, box_colour, (x + mod_x, y + mod_y, w + mod_w, h + mod_h))
+            pygame.draw.rect(self.gameDisplay, box_colour, (inner_x, inner_y, inner_w, inner_h))
 
     def draw_sub_grid(self, border, border_colour, box_colour, highlight_colour, x, y, w, h):
-        try:
-            mod_x, mod_y, mod_w, mod_h = self.borders[border]
-        except KeyError:
-            raise
-        else:
-            pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
-            # update position and size values for inner rectangle
-            x, y = x + mod_x, y + mod_y
-            w, h = w + mod_w, h + mod_h
-            pygame.draw.rect(self.gameDisplay, box_colour, (x, y, w, h))
+        # draw bounding box of subgrid
+        mod_x, mod_y, mod_w, mod_h = BORDERS[border]
+        pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
+        # update position and size values for inner rectangle
+        x, y = x + mod_x, y + mod_y
+        w, h = w + mod_w, h + mod_h
+        pygame.draw.rect(self.gameDisplay, box_colour, (x, y, w, h))
 
+        # calculate inner box for subgrid
         cell_size = min(w, h)
-        x, y = x + 2 * self.sub_grid_padding, y + 2 * self.sub_grid_padding
-        w = h = cell_size - 4 * self.sub_grid_padding
+        x, y = x + 2 * SUB_GRID_PADDING, y + 2 * SUB_GRID_PADDING
+        w = h = cell_size - 4 * SUB_GRID_PADDING
         cell_width_ = w / 3
         cell_height_ = h / 3
 
-        self.draw_subcell('bottom_right', border_colour, box_colour, highlight_colour, x, y, cell_width_, cell_height_,
-                          self.subcell_clicked)
-        self.draw_subcell('u_shape', border_colour, box_colour, highlight_colour, x + (w / 3), y, cell_width_,
-                          cell_height_,
-                          self.subcell_clicked)
-        self.draw_subcell('bottom_left', border_colour, box_colour, highlight_colour, x + w * (2 / 3), y, cell_width_,
-                          cell_height_,
-                          self.subcell_clicked)
-        # middle row
-        self.draw_subcell(']_shape', border_colour, box_colour, highlight_colour, x, y + (h / 3), cell_width_,
-                          cell_height_,
-                          self.subcell_clicked)
-        self.draw_subcell('o_shape', border_colour, box_colour, highlight_colour, x + w / 3, y + h / 3, cell_width_,
-                          cell_height_,
-                          self.subcell_clicked)
-        self.draw_subcell('[_shape', border_colour, box_colour, highlight_colour, x + w * (2 / 3), y + h / 3,
-                          cell_width_,
-                          cell_height_, self.subcell_clicked)
-        # bottom row
-        self.draw_subcell('top_right', border_colour, box_colour, highlight_colour, x, y + h * (2 / 3), cell_width_,
-                          cell_height_,
-                          self.subcell_clicked)
-        self.draw_subcell('n_shape', border_colour, box_colour, highlight_colour, x + w / 3, y + h * (2 / 3),
-                          cell_width_,
-                          cell_height_, self.subcell_clicked)
-        self.draw_subcell('top_left', border_colour, box_colour, highlight_colour, x + w * (2 / 3), y + h * (2 / 3),
-                          cell_width_,
-                          cell_height_, self.subcell_clicked)
+        positions = [
+            # top row
+            {'border': 'bottom_right', 'x': x,               'y': y},
+            {'border': 'u_shape',      'x': x + w * (1 / 3), 'y': y},
+            {'border': 'bottom_left',  'x': x + w * (2 / 3), 'y': y},
 
-    def draw_main_grid(self, pos_x, pos_y):
-        # top row
-        self.draw_sub_grid(border='bottom_right', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x, y=pos_y, w=self.main_box_width, h=self.main_box_height)
-        self.draw_sub_grid(border='u_shape', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width / 3, y=pos_y, w=self.main_box_width, h=self.main_box_height)
-        self.draw_sub_grid(border='bottom_left', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width * (2 / 3), y=pos_y, w=self.main_box_width, h=self.main_box_height)
-        # middle row
-        self.draw_sub_grid(border=']_shape', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x, y=pos_y + self.board_height / 3, w=self.main_box_width, h=self.main_box_height)
-        self.draw_sub_grid(border='o_shape', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width / 3, y=pos_y + self.board_height / 3, w=self.main_box_width,
-                           h=self.main_box_height)
-        self.draw_sub_grid(border='[_shape', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width * (2 / 3), y=pos_y + self.board_height / 3, w=self.main_box_width,
-                           h=self.main_box_height)
-        # bottom row
-        self.draw_sub_grid(border='top_right', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x, y=pos_y + self.board_height * (2 / 3), w=self.main_box_width,
-                           h=self.main_box_height)
-        self.draw_sub_grid(border='n_shape', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width / 3, y=pos_y + self.board_height * (2 / 3), w=self.main_box_width,
-                           h=self.main_box_height)
-        self.draw_sub_grid(border='top_left', border_colour=BLACK, box_colour=WHITE, highlight_colour=GREEN,
-                           x=pos_x + self.board_width * (2 / 3), y=pos_y + self.board_height * (2 / 3),
-                           w=self.main_box_width,
-                           h=self.main_box_height)
+            # middle row
+            {'border': ']_shape',      'x': x,               'y': y + (h / 3)},
+            {'border': 'o_shape',      'x': x + w * (1 / 3), 'y': y + (h / 3)},
+            {'border': '[_shape',      'x': x + w * (2 / 3), 'y': y + (h / 3)},
 
-    def subcell_clicked(self, x, y, w, h):  # todo this should take value from ultimate board
+            # bottom row
+            {'border': 'top_right',    'x': x,               'y': y + h * (2 / 3)},
+            {'border': 'n_shape',      'x': x + w * (1 / 3), 'y': y + h * (2 / 3)},
+            {'border': 'top_left',     'x': x + w * (2 / 3), 'y': y + h * (2 / 3)},
+        ]
+
+        for position in positions:
+            self.draw_subcell(**position, border_colour=border_colour, box_colour=box_colour, w=cell_width_,
+                              h=cell_height_, highlight_colour=highlight_colour, action=self.subcell_clicked)
+
+    def draw_main_grid(self):
+        for parameters in MAIN_GRID_DRAW_PARAMETERS:
+            self.draw_sub_grid(**parameters)
+
+    def subcell_clicked(self, x, y, w, h):  # todo this should taken value from ultimate board
         self.clicked_cells.append((x, y, w, h, self.player))
         self.player *= -1
 
@@ -191,7 +127,7 @@ class GuiBoard:
                     self.quit_game()
 
             self.gameDisplay.fill(WHITE)
-            self.draw_main_grid(self.offset_x, self.offset_y)
+            self.draw_main_grid()
             self.draw_clicked_cells()
             pygame.display.update()
             self.clock.tick(60)

@@ -36,7 +36,51 @@ class UltimateBoard(BaseBoard):
         _b.history = self.history.copy()
         return _b
 
-    def make_move(self, move: int, board: int = None):  # todo split in handlers depending on nextBoard and board values
+    # todo potentially only needed for console play, otherwise this will be handled inside gui
+    def _is_board_valid(self, board: int):
+        """Determines if the provided (or not) board is valid, or in instances
+        where the next board is forced (from last player's move).
+        """
+        if self.nextBoard is None and board is None:
+            print('Need to provide a board idx at start of game')
+            return False, None
+
+        if self.nextBoard is not None:
+            # handle case when you can play on any board
+            if self.nextBoard == ANY_BOARD and board is None:
+                print('You need to provide a board to your move on since no forced board exists')
+                return False, None
+            elif self.nextBoard == ANY_BOARD and board is not None:
+                if self.pos[board].get_result() is not None:
+                    print('You need to provide a board that does not yet have a result.')
+                    return False, None
+                else:
+                    return True, board
+
+            # if we are forced to play on a board (due to opponents move)
+            # check if nextBoard has a winner. If it does => player should
+            # have picked a new board to play on
+            if self.pos[self.nextBoard].get_result() is not None:
+                if board is None:
+                    print('The forced board already has a result on it.'
+                          'Please choose a different board.')
+                    return False, None
+                else:
+                    if self.pos[board].get_result() is not None:
+                        print('The chosen board has a result on it.'
+                              'Please chose a different board.')
+                        return False, None
+
+                    return True, board
+
+            # otherwise the forced board, doesn't have a result and the new move
+            # must be played on it
+            return True, self.nextBoard
+
+        # if board is not None but nextBoard is None (i.e. start of game)
+        return True, board
+
+    def make_move(self, move: int, board: int = None):
         """Make a move to the specified board, if no board is specified
         the move is done on the board indicated by nextBoard i.e forced
         by the last played move.
@@ -46,55 +90,13 @@ class UltimateBoard(BaseBoard):
         """
         self.playerJustMoved = -self.playerJustMoved
 
-        if self.nextBoard is None and board is None:
-            print('Need to provide a board idx at start of game')
-            return
+        valid, forced_board = self._is_board_valid(board)
+        if valid:
+            self._make_move(move=move, board=forced_board)
 
-        if self.nextBoard is not None:
-            # handle case when you can play on any board
-            if self.nextBoard == ANY_BOARD and board is None:
-                print('You need to provide a board to your move on since no forced board exists')
-                return
-            elif self.nextBoard == ANY_BOARD and board is not None:
-                if self.pos[board].get_result() is not None:
-                    print('You need to provide a board that does not yet have a result.')
-                    return
-                else:
-                    self.pos[board].make_move(move, self.playerJustMoved)
-                    self.history.append(Move(board_idx=board, move_idx=move))
-                    # the move on the board represents the next board
-                    self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
-                    return
+    def _make_move(self, move: int, board: int):
+        """Actually perform move when the validity of the move has already been determined."""
 
-            # if we are forced to play on a board (due to opponents move)
-            # check if nextBoard has a winner. If it does => player should
-            # have picked a new board to play on
-            if self.pos[self.nextBoard].get_result() is not None:
-                if board is None:
-                    print('The forced board already has a result on it.'
-                          'Please choose a different board.')
-                    return
-                else:
-                    if self.pos[board].get_result() is not None:
-                        print('The chosen board has a result on it.'
-                              'Please chose a different board.')
-                        return
-
-                    self.pos[board].make_move(move, self.playerJustMoved)
-                    self.history.append(Move(board_idx=board, move_idx=move))
-                    # the move on the board represents the next board
-                    self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
-                    return
-
-            # otherwise the forced board, doesn't have a result and the new move
-            # must be played on it
-            self.pos[self.nextBoard].make_move(move, self.playerJustMoved)
-            self.history.append(Move(board_idx=self.nextBoard, move_idx=move))
-            # the move on the board represents the next board
-            self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
-            return
-
-        # if board is not None but nextBoard is None (i.e. start of game)
         self.pos[board].make_move(move, self.playerJustMoved)
         self.history.append(Move(board_idx=board, move_idx=move))
         # the move on the board represents the next board
