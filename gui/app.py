@@ -1,6 +1,36 @@
+import time
+from functools import total_ordering
+
 import pygame
 from gui.constants import *
 from board.ultimate_board import *
+
+
+@total_ordering
+class Cell:
+    """Defines a hashable cell container. Used to store info for all cells in all subgrids."""
+
+    __slots__ = ['pos_x', 'pos_y', 'width', 'height', 'player']
+
+    def __init__(self, pos_x, pos_y, width, height, player):
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.width = width
+        self.height = height
+        self.player = player
+
+    def __repr__(self):
+        return '{name}(pos_x={x}, pos_y={y}, width={w}, height={h}, player={p})'.format(
+            name=self.__class__.__name__, x=self.pos_x, y=self.pos_y, w=self.width, h=self.height, p=self.player)
+
+    def __hash__(self):
+        return hash((self.pos_x, self.pos_y))
+
+    def __eq__(self, other):
+        return self.pos_x == other.pos_x and self.pos_y == other.pos_y
+
+    def __lt__(self, other):
+        return self.pos_x < other.pos_x and self.pos_y < other.pos_y
 
 
 class GuiBoard:
@@ -9,7 +39,7 @@ class GuiBoard:
         PLAYER_O: BLUE,
     }
 
-    clicked_cells = []
+    clicked_cells = set()  # a set of all created cells
 
     def __init__(self):
         pygame.init()
@@ -24,10 +54,15 @@ class GuiBoard:
         text_surface = font.render(text, True, BLACK)
         return text_surface, text_surface.get_rect()
 
-    def message_display(self, text):
-        large_text = pygame.font.Font('freesansbold.ttf', 115)
+    def message_display(self, text, pos=None, size=60):
+        if pos is None:
+            pos_x, pos_y = DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2
+        else:
+            pos_x, pos_y = pos
+
+        large_text = pygame.font.Font('freesansbold.ttf', size)
         text_surf, text_rect = self.get_text_objects(text, large_text)
-        text_rect.center = ((DISPLAY_WIDTH / 2), (DISPLAY_HEIGHT / 2))
+        text_rect.center = (pos_x, pos_y)
         self.gameDisplay.blit(text_surf, text_rect)
         pygame.display.update()
 
@@ -111,13 +146,20 @@ class GuiBoard:
         for parameters in MAIN_GRID_DRAW_PARAMETERS:
             self.draw_sub_grid(**parameters)
 
-    def subcell_clicked(self, x, y, w, h):  # todo this should taken value from ultimate board
-        self.clicked_cells.append((x, y, w, h, self.player))
-        self.player *= -1
+    def subcell_clicked(self, x, y, w, h):
+        # todo check if the cell that is clicked is also allowed to be clicked else display warning
+        cell = Cell(x, y, w, h, self.player)
+
+        if cell in self.clicked_cells:  # if cell already clicked -> do nothing
+            return
+
+        self.clicked_cells.add(cell)
+        self.player *= -1  # todo this should take value from ultimate board
 
     def draw_clicked_cells(self):
-        for x, y, w, h, player_ in self.clicked_cells:
-            pygame.draw.rect(self.gameDisplay, self.colors[player_], (x, y, w, h))
+        for cell in self.clicked_cells:
+            pygame.draw.rect(self.gameDisplay, self.colors[cell.player],
+                             (cell.pos_x, cell.pos_y, cell.width, cell.height))
 
     def game_loop(self):
         while True:
