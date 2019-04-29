@@ -1,4 +1,3 @@
-import time
 from functools import total_ordering
 
 import pygame
@@ -39,7 +38,8 @@ class GuiBoard:
         PLAYER_O: BLUE,
     }
 
-    clicked_cells = set()  # a set of all created cells
+    clicked_cells = set()  # a set of all clicked cells
+    all_cells = set()  # a set of all created cells
 
     def __init__(self):
         pygame.init()
