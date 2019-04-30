@@ -1,3 +1,6 @@
+from enum import IntEnum
+from itertools import count
+
 from gui.colors import *
 
 
@@ -6,17 +9,27 @@ DISPLAY_HEIGHT = 600
 BOARD_WIDTH = 480
 BOARD_HEIGHT = 480
 
+# noinspection PyTypeChecker
+# Create an enum of values starting from 0
+Grid = IntEnum('Grid', zip([
+    'TOP_LEFT', 'TOP_MIDDLE', 'TOP_RIGHT',
+    'MIDDLE_LEFT', 'MIDDLE_MIDDLE', 'MIDDLE_RIGHT',
+    'BOTTOM_LEFT', 'BOTTOM_MIDDLE', 'BOTTOM_RIGHT'], count()))
+
+
 BORDER_THICKNESS = 2
 BORDERS = {
-    'top_left':     (BORDER_THICKNESS, BORDER_THICKNESS, -BORDER_THICKNESS,     -BORDER_THICKNESS),
-    'top_right':    (0,                BORDER_THICKNESS, -BORDER_THICKNESS,     -BORDER_THICKNESS),
-    'bottom_left':  (BORDER_THICKNESS, 0,                -BORDER_THICKNESS,     -BORDER_THICKNESS),
-    'bottom_right': (0,                0,                -BORDER_THICKNESS,     -BORDER_THICKNESS),
-    'u_shape':      (BORDER_THICKNESS, 0,                -2 * BORDER_THICKNESS, -BORDER_THICKNESS),
-    'n_shape':      (BORDER_THICKNESS, BORDER_THICKNESS, -2 * BORDER_THICKNESS, -BORDER_THICKNESS),
-    'o_shape':      (BORDER_THICKNESS, BORDER_THICKNESS, -2 * BORDER_THICKNESS, -2 * BORDER_THICKNESS),
-    ']_shape':      (0,                BORDER_THICKNESS, -BORDER_THICKNESS,     -2 * BORDER_THICKNESS),
-    '[_shape':      (BORDER_THICKNESS, BORDER_THICKNESS, -BORDER_THICKNESS,     -2 * BORDER_THICKNESS),
+    Grid.TOP_LEFT:      (0, 0, -BORDER_THICKNESS, -BORDER_THICKNESS),
+    Grid.TOP_MIDDLE:    (BORDER_THICKNESS, 0, -2 * BORDER_THICKNESS, -BORDER_THICKNESS),
+    Grid.TOP_RIGHT:     (BORDER_THICKNESS, 0, -BORDER_THICKNESS, -BORDER_THICKNESS),
+
+    Grid.MIDDLE_LEFT:   (0, BORDER_THICKNESS, -BORDER_THICKNESS, -2 * BORDER_THICKNESS),
+    Grid.MIDDLE_MIDDLE: (BORDER_THICKNESS, BORDER_THICKNESS, -2 * BORDER_THICKNESS, -2 * BORDER_THICKNESS),
+    Grid.MIDDLE_RIGHT:  (BORDER_THICKNESS, BORDER_THICKNESS, -BORDER_THICKNESS, -2 * BORDER_THICKNESS),
+
+    Grid.BOTTOM_LEFT:   (0, BORDER_THICKNESS, -BORDER_THICKNESS, -BORDER_THICKNESS),
+    Grid.BOTTOM_MIDDLE: (BORDER_THICKNESS, BORDER_THICKNESS, -2 * BORDER_THICKNESS, -BORDER_THICKNESS),
+    Grid.BOTTOM_RIGHT:  (BORDER_THICKNESS, BORDER_THICKNESS, -BORDER_THICKNESS, -BORDER_THICKNESS),
 }
 
 SUB_GRID_PADDING = 11
@@ -33,41 +46,41 @@ BOX_COLOR = WHITE
 
 # In these parameters the values for x & y will the added to the current position computed for each grid cell
 MAIN_GRID_DRAW_PARAMETERS = [
-    {'border': 'bottom_right', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.TOP_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': 'u_shape', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.TOP_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': 'bottom_left', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.TOP_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     # middle row
-    {'border': ']_shape', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.MIDDLE_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': 'o_shape', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.MIDDLE_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': '[_shape', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.MIDDLE_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     # bottom row
-    {'border': 'top_right', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.BOTTOM_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': 'n_shape', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.BOTTOM_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
-    {'border': 'top_left', 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
+    {'border': Grid.BOTTOM_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
      'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},

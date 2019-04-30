@@ -9,14 +9,16 @@ from board.ultimate_board import *
 class Cell:
     """Defines a hashable cell container. Used to store info for all cells in all subgrids."""
 
-    __slots__ = ['pos_x', 'pos_y', 'width', 'height', 'player']
+    __slots__ = ['pos_x', 'pos_y', 'width', 'height', 'player', 'board_idx', 'cell_idx']
 
-    def __init__(self, pos_x, pos_y, width, height, player):
+    def __init__(self, pos_x, pos_y, width, height, player, board_idx=None, cell_idx=None):
         self.pos_x = pos_x
         self.pos_y = pos_y
         self.width = width
         self.height = height
         self.player = player
+        self.board_idx = board_idx
+        self.cell_idx = cell_idx
 
     def __repr__(self):
         return '{name}(pos_x={x}, pos_y={y}, width={w}, height={h}, player={p})'.format(
@@ -40,14 +42,13 @@ class GuiBoard:
 
     clicked_cells = set()  # a set of all clicked cells
     all_cells = set()  # a set of all created cells
+    on_cell_clicked = None  # callback method for action on cell clicked
 
     def __init__(self):
         pygame.init()
         self.gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
         pygame.display.set_caption('Ultimate Tic Tac Toe')
         self.clock = pygame.time.Clock()
-
-        self.player = PLAYER_X  # todo this should be replaced with value from ultimate board
 
     @staticmethod
     def get_text_objects(text, font):
@@ -88,7 +89,7 @@ class GuiBoard:
         pygame.quit()
         quit()
 
-    def draw_subcell(self, border, border_colour, box_colour, highlight_colour, x, y, w, h, action=None):
+    def draw_subcell(self, border, border_colour, box_colour, highlight_colour, x, y, w, h, grid_idx, action=None):
         # Draw bounding box of cell
         mod_x, mod_y, mod_w, mod_h = BORDERS[border]
         pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
@@ -97,11 +98,17 @@ class GuiBoard:
         click = pygame.mouse.get_pressed()
         inner_x, inner_y, inner_w, inner_h = x + mod_x, y + mod_y, w + mod_w, h + mod_h
 
+        # keep track of all cells on the board
+        cell = Cell(pos_x=inner_x, pos_y=inner_y, width=inner_w, height=inner_h,
+                    player=None, board_idx=grid_idx, cell_idx=border)
+        if cell not in self.all_cells:
+            self.all_cells.add(cell)
+
         if x + w > mouse[0] > x and y + h > mouse[1] > y:
             pygame.draw.rect(self.gameDisplay, highlight_colour, (inner_x, inner_y, inner_w, inner_h))
 
             if click[0] == 1 and action is not None:
-                action(inner_x, inner_y, inner_w, inner_h)
+                action(inner_x, inner_y, inner_w, inner_h, grid_idx, border)
         else:
             pygame.draw.rect(self.gameDisplay, box_colour, (inner_x, inner_y, inner_w, inner_h))
 
@@ -123,59 +130,32 @@ class GuiBoard:
 
         positions = [
             # top row
-            {'border': 'bottom_right', 'x': x,               'y': y},
-            {'border': 'u_shape',      'x': x + w * (1 / 3), 'y': y},
-            {'border': 'bottom_left',  'x': x + w * (2 / 3), 'y': y},
+            {'border': Grid.TOP_LEFT,      'x': x, 'y': y},
+            {'border': Grid.TOP_MIDDLE,    'x': x + w * (1 / 3), 'y': y},
+            {'border': Grid.TOP_RIGHT,     'x': x + w * (2 / 3), 'y': y},
 
             # middle row
-            {'border': ']_shape',      'x': x,               'y': y + (h / 3)},
-            {'border': 'o_shape',      'x': x + w * (1 / 3), 'y': y + (h / 3)},
-            {'border': '[_shape',      'x': x + w * (2 / 3), 'y': y + (h / 3)},
+            {'border': Grid.MIDDLE_LEFT,   'x': x, 'y': y + (h / 3)},
+            {'border': Grid.MIDDLE_MIDDLE, 'x': x + w * (1 / 3), 'y': y + (h / 3)},
+            {'border': Grid.MIDDLE_RIGHT,  'x': x + w * (2 / 3), 'y': y + (h / 3)},
 
             # bottom row
-            {'border': 'top_right',    'x': x,               'y': y + h * (2 / 3)},
-            {'border': 'n_shape',      'x': x + w * (1 / 3), 'y': y + h * (2 / 3)},
-            {'border': 'top_left',     'x': x + w * (2 / 3), 'y': y + h * (2 / 3)},
+            {'border': Grid.BOTTOM_LEFT,   'x': x, 'y': y + h * (2 / 3)},
+            {'border': Grid.BOTTOM_MIDDLE, 'x': x + w * (1 / 3), 'y': y + h * (2 / 3)},
+            {'border': Grid.BOTTOM_RIGHT,  'x': x + w * (2 / 3), 'y': y + h * (2 / 3)},
         ]
 
         for position in positions:
+            # here border is the index of which grid all of the cells are part of
             self.draw_subcell(**position, border_colour=border_colour, box_colour=box_colour, w=cell_width_,
-                              h=cell_height_, highlight_colour=highlight_colour, action=self.subcell_clicked)
+                              h=cell_height_, highlight_colour=highlight_colour, grid_idx=border,
+                              action=self.on_cell_clicked)
 
     def draw_main_grid(self):
         for parameters in MAIN_GRID_DRAW_PARAMETERS:
             self.draw_sub_grid(**parameters)
 
-    def subcell_clicked(self, x, y, w, h):
-        # todo check if the cell that is clicked is also allowed to be clicked else display warning
-        cell = Cell(x, y, w, h, self.player)
-
-        if cell in self.clicked_cells:  # if cell already clicked -> do nothing
-            return
-
-        self.clicked_cells.add(cell)
-        self.player *= -1  # todo this should take value from ultimate board
-
     def draw_clicked_cells(self):
         for cell in self.clicked_cells:
             pygame.draw.rect(self.gameDisplay, self.colors[cell.player],
                              (cell.pos_x, cell.pos_y, cell.width, cell.height))
-
-    def game_loop(self):
-        while True:
-            for event in pygame.event.get():
-                # print(event)
-                if event.type == pygame.QUIT:
-                    self.quit_game()
-
-            self.gameDisplay.fill(WHITE)
-            self.draw_main_grid()
-            self.draw_clicked_cells()
-            pygame.display.update()
-            self.clock.tick(60)
-
-
-# TODO replace 3 with board size
-if __name__ == '__main__':
-    gui_ = GuiBoard()
-    gui_.game_loop()
