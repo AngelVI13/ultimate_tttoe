@@ -110,6 +110,8 @@ class Gui(GuiBoard):
                 time.sleep(PAUSE_BEFORE_GAME_RESTART)
                 self.restart_game()
 
+            # todo add indication whose turn it is to play
+
 
 if __name__ == '__main__':
     g = Gui()
