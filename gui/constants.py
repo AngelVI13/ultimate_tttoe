@@ -2,6 +2,7 @@ from enum import IntEnum
 from itertools import count
 
 from gui.colors import *
+from board.constants import PLAYER_X, PLAYER_O, DRAW
 
 
 DISPLAY_WIDTH = 600
@@ -40,48 +41,47 @@ CELL_HEIGHT = MAIN_BOX_HEIGHT / 3
 # offset for main grid from main window
 OFFSET_X, OFFSET_Y = (DISPLAY_WIDTH - BOARD_WIDTH) / 2, (DISPLAY_HEIGHT - BOARD_HEIGHT) / 2
 
-HIGHLIGHT_COLOR = GREEN
+GRID_RESULT_COLORS = {
+    PLAYER_X: RED_HIGHLIGHT,
+    PLAYER_O: BLUE_HIGHLIGHT,
+    DRAW: GREY
+}
+
 BORDER_COLOR = BLACK
 BOX_COLOR = WHITE
 
 # In these parameters the values for x & y will the added to the current position computed for each grid cell
 MAIN_GRID_DRAW_PARAMETERS = [
     {'border': Grid.TOP_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.TOP_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.TOP_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     # middle row
     {'border': Grid.MIDDLE_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.MIDDLE_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.MIDDLE_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y + BOARD_HEIGHT / 3,
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     # bottom row
     {'border': Grid.BOTTOM_LEFT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X, 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.BOTTOM_MIDDLE, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH / 3, 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
     {'border': Grid.BOTTOM_RIGHT, 'border_colour': BORDER_COLOR, 'box_colour': BOX_COLOR,
-     'highlight_colour': HIGHLIGHT_COLOR,
      'x': OFFSET_X + BOARD_WIDTH * (2 / 3), 'y': OFFSET_Y + BOARD_HEIGHT * (2 / 3),
      'w': MAIN_BOX_WIDTH, 'h': MAIN_BOX_HEIGHT},
 ]
+
+FRAMES_PER_SECOND = 60
+PAUSE_BEFORE_GAME_RESTART = 4  # seconds

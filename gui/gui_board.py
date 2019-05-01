@@ -42,7 +42,7 @@ class GuiBoard:
 
     clicked_cells = set()  # a set of all clicked cells
     all_cells = set()  # a set of all created cells
-    on_cell_clicked = None  # callback method for action on cell clicked
+    all_grids = set()  # a set of all subgrids
 
     def __init__(self):
         pygame.init()
@@ -89,13 +89,11 @@ class GuiBoard:
         pygame.quit()
         quit()
 
-    def draw_subcell(self, border, border_colour, box_colour, highlight_colour, x, y, w, h, grid_idx, action=None):
+    def draw_subcell(self, border, border_colour, box_colour, x, y, w, h, grid_idx):
         # Draw bounding box of cell
         mod_x, mod_y, mod_w, mod_h = BORDERS[border]
         pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
 
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
         inner_x, inner_y, inner_w, inner_h = x + mod_x, y + mod_y, w + mod_w, h + mod_h
 
         # keep track of all cells on the board
@@ -104,15 +102,11 @@ class GuiBoard:
         if cell not in self.all_cells:
             self.all_cells.add(cell)
 
-        if x + w > mouse[0] > x and y + h > mouse[1] > y:
-            pygame.draw.rect(self.gameDisplay, highlight_colour, (inner_x, inner_y, inner_w, inner_h))
+        # draw inner box of cell (main content)
+        pygame.draw.rect(self.gameDisplay, box_colour, (inner_x, inner_y, inner_w, inner_h))
 
-            if click[0] == 1 and action is not None:
-                action(inner_x, inner_y, inner_w, inner_h, grid_idx, border)
-        else:
-            pygame.draw.rect(self.gameDisplay, box_colour, (inner_x, inner_y, inner_w, inner_h))
-
-    def draw_sub_grid(self, border, border_colour, box_colour, highlight_colour, x, y, w, h):
+    def draw_sub_grid(self, border, border_colour, box_colour, x, y, w, h):
+        # todo maybe turn this into a method to clean up the logic
         # draw bounding box of subgrid
         mod_x, mod_y, mod_w, mod_h = BORDERS[border]
         pygame.draw.rect(self.gameDisplay, border_colour, (x, y, w, h))
@@ -120,6 +114,11 @@ class GuiBoard:
         x, y = x + mod_x, y + mod_y
         w, h = w + mod_w, h + mod_h
         pygame.draw.rect(self.gameDisplay, box_colour, (x, y, w, h))
+
+        # keep track of all subgrids. NOTE: here 'border' is the index of the subgrid on the main grid.
+        grid = Cell(pos_x=x, pos_y=y, width=w, height=h, player=None, board_idx=border, cell_idx=None)
+        if grid not in self.all_grids:
+            self.all_grids.add(grid)
 
         # calculate inner box for subgrid
         cell_size = min(w, h)
@@ -148,8 +147,7 @@ class GuiBoard:
         for position in positions:
             # here border is the index of which grid all of the cells are part of
             self.draw_subcell(**position, border_colour=border_colour, box_colour=box_colour, w=cell_width_,
-                              h=cell_height_, highlight_colour=highlight_colour, grid_idx=border,
-                              action=self.on_cell_clicked)
+                              h=cell_height_, grid_idx=border)
 
     def draw_main_grid(self):
         for parameters in MAIN_GRID_DRAW_PARAMETERS:
