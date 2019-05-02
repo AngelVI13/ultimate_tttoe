@@ -55,22 +55,24 @@ class GuiBoard:
         text_surface = font.render(text, True, BLACK)
         return text_surface, text_surface.get_rect()
 
-    def message_display(self, text, pos=None, size=60):
+    def message_display(self, text, pos=None, font='freesansbold.ttf', size=60, update=True):
         if pos is None:
             pos_x, pos_y = DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2
         else:
             pos_x, pos_y = pos
 
-        large_text = pygame.font.Font('freesansbold.ttf', size)
+        large_text = pygame.font.SysFont(font, size)
         text_surf, text_rect = self.get_text_objects(text, large_text)
         text_rect.center = (pos_x, pos_y)
         self.gameDisplay.blit(text_surf, text_rect)
-        pygame.display.update()
+
+        if update:
+            pygame.display.update()
 
     def button(self, msg, x, y, w, h, ic, ac, action=None):
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
-        print(click)
+        # print(click)
         if x + w > mouse[0] > x and y + h > mouse[1] > y:
             pygame.draw.rect(self.gameDisplay, ac, (x, y, w, h))
 
@@ -163,4 +165,4 @@ class GuiBoard:
         # todo remove magic numbers
         pygame.draw.rect(self.gameDisplay, BLACK, (OFFSET_X+8, OFFSET_Y-22, 24, 14))
         pygame.draw.rect(self.gameDisplay, self.colors[player_to_move], (OFFSET_X+10, OFFSET_Y-20, 20, 10))
-        self.message_display(text=' to move', pos=(OFFSET_X+60, OFFSET_Y-15), size=14)
+        self.message_display(text=' to move', pos=(OFFSET_X+60, OFFSET_Y-15), font='comicsansms', size=14)

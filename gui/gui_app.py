@@ -11,7 +11,7 @@ class Gui(GuiBoard):
         self.allowed_cells = set()
         self.grids_with_result = set()  # all grids that have a result on them
 
-    def restart_game(self):
+    def reset_game(self):
         self.board = UltimateBoard()
         self.allowed_cells = set()
         self.grids_with_result = set()
@@ -63,7 +63,6 @@ class Gui(GuiBoard):
 
     def draw_results(self):  # todo this is the same as draw_all moves? parameterize
         for grid in self.grids_with_result:
-            # print(grid.player, GRID_RESULT_COLORS[grid.player])
             pygame.draw.rect(self.gameDisplay, GRID_RESULT_COLORS[grid.player],
                              (grid.pos_x, grid.pos_y, grid.width, grid.height))
 
@@ -71,20 +70,36 @@ class Gui(GuiBoard):
         result = self.board.get_result(player_jm=PLAYER_X)
         if result is not None:
             self.message_display(text=RESULT_TEXT[result])
-            time.sleep(PAUSE_BEFORE_GAME_RESTART)
-            self.restart_game()
+            self.message_display(text='Click anywhere to continue...',
+                                 pos=(DISPLAY_WIDTH / 2, (BOARD_HEIGHT + OFFSET_Y + 30)), font='comicsansms', size=20)
+
+            # Wait until a mouse click before going back to main menu
+            clicked = False
+            while not clicked:
+                for event in pygame.event.get():
+                    # print(event)
+                    if event.type == pygame.QUIT:
+                        self.quit_game()
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        clicked = True
+            return True  # game is over
+        return False  # game not over
 
     def click_random_cell(self):
         random_cell = random.choice(list(self.allowed_cells))
         self.subcell_clicked(random_cell)
         time.sleep(0.2)  # sleep 1s so output can be checked
 
+    def do_nothing(self):
+        pass  # todo remove this later
+
     def game_loop(self):
+        self.reset_game()
         # set up an endless cycle of B values (rgB) for highlighting moves
         highlight_range = [i for i in range(HIGHLIGHT_LOW, HIGHLIGHT_HIGH+1, HIGHLIGHT_STEP)]
         brightness_iter = cycle(chain(highlight_range, reversed(highlight_range)))
 
-        while True:
+        while not self.check_for_game_over():
             for event in pygame.event.get():
                 # print(event)
                 if event.type == pygame.QUIT:
@@ -102,7 +117,7 @@ class Gui(GuiBoard):
             if not self.allowed_cells:
                 self.allowed_cells = self.find_allowed_cells()
 
-            self.click_random_cell()
+            self.click_random_cell()  # todo add support for single player and two player game
 
             self.draw_clicked_cells()
             self.draw_results()
@@ -111,9 +126,25 @@ class Gui(GuiBoard):
             pygame.display.update()
             self.clock.tick(FRAMES_PER_SECOND)
 
-            self.check_for_game_over()
+    def menu_loop(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.quit_game()
+
+            self.gameDisplay.fill(WHITE)
+            self.message_display("Ultimate Tic Tac Toe", pos=(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3),
+                                 font='comicsansms', size=40, update=False)
+
+            self.button("Single Player", **MENU_BUTTON_POSITIONS[0], action=self.game_loop)
+            self.button("Two Player",    **MENU_BUTTON_POSITIONS[1], action=self.do_nothing)
+            self.button("Settings",      **MENU_BUTTON_POSITIONS[2], action=self.do_nothing)
+            self.button("Quit",          **MENU_BUTTON_POSITIONS[3], action=self.quit_game)
+
+            pygame.display.update()
+            self.clock.tick(15)
 
 
 if __name__ == '__main__':
     g = Gui()
-    g.game_loop()
+    g.menu_loop()
