@@ -15,6 +15,7 @@ class Gui(GuiBoard):
         self.board = UltimateBoard()
         self.allowed_cells = set()
         self.grids_with_result = set()
+        self.clicked_cells = set()
 
     def subcell_clicked(self, cell):
         # do not provide player just yet, only do so when we are sure we can click the cell
@@ -66,9 +67,21 @@ class Gui(GuiBoard):
             pygame.draw.rect(self.gameDisplay, GRID_RESULT_COLORS[grid.player],
                              (grid.pos_x, grid.pos_y, grid.width, grid.height))
 
+    def check_for_game_over(self):
+        result = self.board.get_result(player_jm=PLAYER_X)
+        if result is not None:
+            self.message_display(text=RESULT_TEXT[result])
+            time.sleep(PAUSE_BEFORE_GAME_RESTART)
+            self.restart_game()
+
+    def click_random_cell(self):
+        random_cell = random.choice(list(self.allowed_cells))
+        self.subcell_clicked(random_cell)
+        time.sleep(0.2)  # sleep 1s so output can be checked
+
     def game_loop(self):
         # set up an endless cycle of B values (rgB) for highlighting moves
-        highlight_range = [i for i in range(140, 201, 2)]
+        highlight_range = [i for i in range(HIGHLIGHT_LOW, HIGHLIGHT_HIGH+1, HIGHLIGHT_STEP)]
         brightness_iter = cycle(chain(highlight_range, reversed(highlight_range)))
 
         while True:
@@ -86,31 +99,19 @@ class Gui(GuiBoard):
             self.gameDisplay.fill(WHITE)
             self.draw_main_grid()
 
-            # todo check for game end here as well. Might not have allowed cells because game is over
             if not self.allowed_cells:
                 self.allowed_cells = self.find_allowed_cells()
+
+            self.click_random_cell()
 
             self.draw_clicked_cells()
             self.draw_results()
             self.draw_allowed_moves(highlight)
+            self.draw_side_to_move(-self.board.playerJustMoved)
             pygame.display.update()
             self.clock.tick(FRAMES_PER_SECOND)
 
-            # todo factor out repetitive code below
-            if self.board.get_result(player_jm=PLAYER_X) == WIN:
-                self.message_display(text='X won!')
-                time.sleep(PAUSE_BEFORE_GAME_RESTART)
-                self.restart_game()
-            elif self.board.get_result(player_jm=PLAYER_O) == WIN:
-                self.message_display(text='O won!')
-                time.sleep(PAUSE_BEFORE_GAME_RESTART)
-                self.restart_game()
-            elif self.board.get_result(player_jm=PLAYER_O) == DRAW:
-                self.message_display(text='Tie!')
-                time.sleep(PAUSE_BEFORE_GAME_RESTART)
-                self.restart_game()
-
-            # todo add indication whose turn it is to play
+            self.check_for_game_over()
 
 
 if __name__ == '__main__':

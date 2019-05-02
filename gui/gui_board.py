@@ -157,3 +157,10 @@ class GuiBoard:
         for cell in self.clicked_cells:
             pygame.draw.rect(self.gameDisplay, self.colors[cell.player],
                              (cell.pos_x, cell.pos_y, cell.width, cell.height))
+
+    def draw_side_to_move(self, player_to_move):
+        """Draws side to move in top left corner of screen (game screen)"""
+        # todo remove magic numbers
+        pygame.draw.rect(self.gameDisplay, BLACK, (OFFSET_X+8, OFFSET_Y-22, 24, 14))
+        pygame.draw.rect(self.gameDisplay, self.colors[player_to_move], (OFFSET_X+10, OFFSET_Y-20, 20, 10))
+        self.message_display(text=' to move', pos=(OFFSET_X+60, OFFSET_Y-15), size=14)

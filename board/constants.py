@@ -19,3 +19,10 @@ ANY_BOARD = BOARD_SIZE + 1  # Indicates when the player is able to choose any bo
 LOSS = 0.0
 DRAW = 0.5
 WIN = 1.0
+
+# From the viewpoint of player X
+RESULT_TEXT = {
+    WIN: 'X won!',
+    DRAW: 'Tie!',
+    LOSS: 'O won!'
+}
