@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, Enum, auto
 from itertools import count
 
 from gui.colors import *
@@ -16,6 +16,11 @@ Grid = IntEnum('Grid', zip([
     'TOP_LEFT', 'TOP_MIDDLE', 'TOP_RIGHT',
     'MIDDLE_LEFT', 'MIDDLE_MIDDLE', 'MIDDLE_RIGHT',
     'BOTTOM_LEFT', 'BOTTOM_MIDDLE', 'BOTTOM_RIGHT'], count()))
+
+
+class GameType(Enum):
+    SINGLE_PLAYER = auto()
+    MULTI_PLAYER = auto()
 
 
 BORDER_THICKNESS = 2
@@ -99,4 +104,6 @@ MAIN_GRID_DRAW_PARAMETERS = [
 ]
 
 FRAMES_PER_SECOND = 60
-PAUSE_BEFORE_GAME_RESTART = 4  # seconds
+# after entering game loop pause for some time before allowing the user to click
+# fixes issues with accidental clicks
+PAUSE_BEFORE_USER_INPUT = 1

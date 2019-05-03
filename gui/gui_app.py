@@ -1,4 +1,5 @@
 import time
+from functools import partial
 from itertools import cycle, chain
 
 from gui.gui_board import *
@@ -77,7 +78,6 @@ class Gui(GuiBoard):
             clicked = False
             while not clicked:
                 for event in pygame.event.get():
-                    # print(event)
                     if event.type == pygame.QUIT:
                         self.quit_game()
                     elif event.type == pygame.MOUSEBUTTONUP:
@@ -93,20 +93,35 @@ class Gui(GuiBoard):
     def do_nothing(self):
         pass  # todo remove this later
 
-    def game_loop(self):
+    def get_game_input(self, game_type, mouse_pos):
+        if game_type == GameType.SINGLE_PLAYER:
+            if self.board.playerJustMoved == PLAYER_O:  # X's turn  todo allow user to select side to play
+                if mouse_pos is not None:
+                    self.click_cell_under_mouse(mouse_pos)
+            else:
+                self.click_random_cell()  # replace with AI
+
+        elif game_type == GameType.MULTI_PLAYER:
+            if mouse_pos is not None:
+                self.click_cell_under_mouse(mouse_pos)
+
+    def game_loop(self, game_type):
+        pygame.event.clear(pygame.MOUSEBUTTONUP)  # clear all mouse clicks
         self.reset_game()
+
         # set up an endless cycle of B values (rgB) for highlighting moves
         highlight_range = [i for i in range(HIGHLIGHT_LOW, HIGHLIGHT_HIGH+1, HIGHLIGHT_STEP)]
         brightness_iter = cycle(chain(highlight_range, reversed(highlight_range)))
 
+        start = time.time()
         while not self.check_for_game_over():
+            pos = None  # default mouse pos is None -> update on MOUSE_UP
+
             for event in pygame.event.get():
-                # print(event)
                 if event.type == pygame.QUIT:
                     self.quit_game()
                 elif event.type == pygame.MOUSEBUTTONUP:
                     pos = pygame.mouse.get_pos()
-                    self.click_cell_under_mouse(pos)
 
             brightness = next(brightness_iter)
             highlight = (255, 255, brightness)  # yellow highlight used to accent available moves
@@ -117,7 +132,10 @@ class Gui(GuiBoard):
             if not self.allowed_cells:
                 self.allowed_cells = self.find_allowed_cells()
 
-            self.click_random_cell()  # todo add support for single player and two player game
+            # Need to wait a bit before allowing user input otherwise the menu click gets detected
+            # as game click
+            if time.time() - start > PAUSE_BEFORE_USER_INPUT:
+                self.get_game_input(game_type, pos)
 
             self.draw_clicked_cells()
             self.draw_results()
@@ -136,8 +154,10 @@ class Gui(GuiBoard):
             self.message_display("Ultimate Tic Tac Toe", pos=(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3),
                                  font='comicsansms', size=40, update=False)
 
-            self.button("Single Player", **MENU_BUTTON_POSITIONS[0], action=self.game_loop)
-            self.button("Two Player",    **MENU_BUTTON_POSITIONS[1], action=self.do_nothing)
+            self.button("Single Player", **MENU_BUTTON_POSITIONS[0],
+                        action=partial(self.game_loop, GameType.SINGLE_PLAYER))
+            self.button("Two Player",    **MENU_BUTTON_POSITIONS[1],
+                        action=partial(self.game_loop, GameType.MULTI_PLAYER))
             self.button("Settings",      **MENU_BUTTON_POSITIONS[2], action=self.do_nothing)
             self.button("Quit",          **MENU_BUTTON_POSITIONS[3], action=self.quit_game)
 
