@@ -2,6 +2,7 @@ import time
 from functools import partial
 from itertools import cycle, chain
 
+from engine.uct import uct_multi
 from gui.gui_board import *
 
 
@@ -90,6 +91,9 @@ class Gui(GuiBoard):
         self.subcell_clicked(random_cell)
         time.sleep(0.2)  # sleep 1s so output can be checked
 
+    def get_best_engine_move(self):
+        print(uct_multi(self.board, itermax=10000, verbose=False))
+
     def do_nothing(self):
         pass  # todo remove this later
 
@@ -99,7 +103,7 @@ class Gui(GuiBoard):
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
             else:
-                self.click_random_cell()  # replace with AI
+                self.click_random_cell()  # todo replace with AI
 
         elif game_type == GameType.MULTI_PLAYER:
             if mouse_pos is not None:
@@ -141,6 +145,7 @@ class Gui(GuiBoard):
             self.draw_results()
             self.draw_allowed_moves(highlight)
             self.draw_side_to_move(-self.board.playerJustMoved)
+
             pygame.display.update()
             self.clock.tick(FRAMES_PER_SECOND)
 
