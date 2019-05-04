@@ -19,7 +19,7 @@ def uct_multi(rootstate_: Board, itermax, verbose):
     processes = []
     for move in moves:
         current_state = rootstate_.__copy__()
-        current_state.make_move(move)
+        current_state.make_move(*move)
         p = Process(target=uct, args=(queue, move, current_state, avg_iters, verbose))
         p.start()
         processes.append(p)
@@ -28,8 +28,9 @@ def uct_multi(rootstate_: Board, itermax, verbose):
         process.join()
     # for move in moves:
     #     state = rootstate_.__copy__()
-    #     state.make_move(move)
+    #     state.make_move(*move)
     #     uct(queue, move, state, avg_iters, verbose)
+    # time.sleep(0.1)
 
     results = []
     while not queue.empty():
@@ -61,19 +62,19 @@ def uct(queue: Queue, move_origin, rootstate, itermax, verbose=False):
         # Select
         while not node.untriedMoves and node.childNodes:  # node is fully expanded and non-terminal
             node = node.uct_select_child()
-            state.make_move(node.move)
+            state.make_move(*node.move)
             moves_to_root += 1
 
         # Expand
         if node.untriedMoves:  # if we can expand (i.e. state/node is non-terminal)
             m = rand_choice(node.untriedMoves)
-            state.make_move(m)
+            state.make_move(*m)
             moves_to_root += 1
             node = node.add_child(m, state)  # add child and descend tree
 
         # Rollout - this can often be made orders of magnitude quicker using a state.GetRandomMove() function
-        while state.get_result(state.side) is None:  # while state is non-terminal
-            state.make_move(rand_choice(state.get_moves()))
+        while state.get_result(state.playerJustMoved) is None:  # while state is non-terminal
+            state.make_move(*rand_choice(state.get_moves()))
             moves_to_root += 1
 
         # Backpropagate

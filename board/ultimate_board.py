@@ -5,7 +5,7 @@ from typing import List, Tuple
 from board.base_board import *
 
 
-Move = namedtuple('Move', ['board_idx', 'move_idx'])
+Move = namedtuple('Move', ['board_idx', 'move_idx', 'forced_board'])
 
 
 class UltimateBoard(BaseBoard):
@@ -80,13 +80,13 @@ class UltimateBoard(BaseBoard):
         # if board is not None but nextBoard is None (i.e. start of game)
         return True, board
 
-    def make_move(self, move: int, board: int = None):
+    def make_move(self, board: int, move: int):
         """Make a move to the specified board, if no board is specified
         the move is done on the board indicated by nextBoard i.e forced
         by the last played move.
 
-        @param move: move to play (i.e. index on the board)
         @param board: index indicating which board to play the move on
+        @param move: move to play (i.e. index on the board)
         """
         self.playerJustMoved = -self.playerJustMoved
 
@@ -98,14 +98,16 @@ class UltimateBoard(BaseBoard):
         """Actually perform move when the validity of the move has already been determined."""
 
         self.pos[board].make_move(move, self.playerJustMoved)
-        self.history.append(Move(board_idx=board, move_idx=move))
+        self.history.append(Move(board_idx=board, move_idx=move, forced_board=self.nextBoard))
         # the move on the board represents the next board
         self.nextBoard = move if self.pos[move].get_result() is None else ANY_BOARD
 
     def take_move(self):
+        self.playerJustMoved = -self.playerJustMoved
+
         move = self.history.pop()
         self.pos[move.board_idx].take_move(move.move_idx)
-        self.nextBoard = move.board_idx  # update nextBoard to be the one forced
+        self.nextBoard = move.forced_board  # update nextBoard to be the one forced
 
     def get_all_moves(self) -> List[Tuple[int, int]]:
         """Get all possible moves in the form of a list of tuples
@@ -177,7 +179,7 @@ if __name__ == '__main__':
         # user_input.strip()
         # user_input = user_input.split(' ')
         # target_board, move_idx = int(user_input[0]), int(user_input[1])
-        ub.make_move(move_idx, target_board)
+        ub.make_move(target_board, move_idx)
         print(ub)
         print('\n\n')
 

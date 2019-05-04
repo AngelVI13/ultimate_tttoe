@@ -20,9 +20,8 @@ class Cell:
         self.board_idx = board_idx
         self.cell_idx = cell_idx
 
-    def __repr__(self):
-        return '{name}(pos_x={x}, pos_y={y}, width={w}, height={h}, player={p})'.format(
-            name=self.__class__.__name__, x=self.pos_x, y=self.pos_y, w=self.width, h=self.height, p=self.player)
+    def __repr__(self):  # todo only used for debugging
+        return '{}(board={}, cell={})'.format(self.__class__.__name__, self.board_idx, self.cell_idx)
 
     def __hash__(self):
         return hash((self.pos_x, self.pos_y))

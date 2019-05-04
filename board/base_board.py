@@ -12,7 +12,7 @@ class BaseBoard:
     def __copy__(self):
         raise NotImplementedError
 
-    def make_move(self, move):
+    def make_move(self, *args, **kwargs):
         raise NotImplementedError
 
     def take_move(self):

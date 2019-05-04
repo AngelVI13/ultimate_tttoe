@@ -31,8 +31,13 @@ class Gui(GuiBoard):
         self.clicked_cells.add(cell)
 
         move, board = cell.cell_idx, cell.board_idx
-        self.board.make_move(move, board)
+        self.board.make_move(board, move)
+        # print(board, move)
+        # print(self.board)
+        # print(self.board.playerJustMoved, self.board.nextBoard)
         self.allowed_cells = self.find_allowed_cells()
+        # print(self.allowed_cells)
+        # print()
 
         result = self.board.pos[board].get_result()
         if result is not None:
@@ -92,7 +97,7 @@ class Gui(GuiBoard):
         time.sleep(0.2)  # sleep 1s so output can be checked
 
     def get_best_engine_move(self):
-        print(uct_multi(self.board, itermax=10000, verbose=False))
+        return uct_multi(self.board, itermax=1000, verbose=False)
 
     def do_nothing(self):
         pass  # todo remove this later
@@ -100,10 +105,18 @@ class Gui(GuiBoard):
     def get_game_input(self, game_type, mouse_pos):
         if game_type == GameType.SINGLE_PLAYER:
             if self.board.playerJustMoved == PLAYER_O:  # X's turn  todo allow user to select side to play
+                # self.click_random_cell()  todo used to testing
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
             else:
-                self.click_random_cell()  # todo replace with AI
+                # self.click_random_cell()  # todo replace with AI
+                board, move = self.get_best_engine_move()
+                for cell in self.allowed_cells:
+                    if cell.board_idx == board and cell.cell_idx == move:
+                        self.subcell_clicked(cell)
+                        break
+                else:
+                    raise Exception('Wrong engine move (move not in allowed moves) ({}{})'.format(board, move))
 
         elif game_type == GameType.MULTI_PLAYER:
             if mouse_pos is not None:
