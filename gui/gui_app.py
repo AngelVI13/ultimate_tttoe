@@ -104,12 +104,11 @@ class Gui(GuiBoard):
 
     def get_game_input(self, game_type, mouse_pos):
         if game_type == GameType.SINGLE_PLAYER:
+            # self.click_random_cell() used for debugginh
             if self.board.playerJustMoved == PLAYER_O:  # X's turn  todo allow user to select side to play
-                # self.click_random_cell()  todo used to testing
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
             else:
-                # self.click_random_cell()  # todo replace with AI
                 board, move = self.get_best_engine_move()
                 for cell in self.allowed_cells:
                     if cell.board_idx == board and cell.cell_idx == move:
@@ -160,7 +159,7 @@ class Gui(GuiBoard):
             self.draw_side_to_move(-self.board.playerJustMoved)
 
             pygame.display.update()
-            self.clock.tick(FRAMES_PER_SECOND)
+            self.clock.tick(GAME_FRAMES_PER_SECOND)
 
     def menu_loop(self):
         while True:
@@ -169,18 +168,19 @@ class Gui(GuiBoard):
                     self.quit_game()
 
             self.gameDisplay.fill(WHITE)
+            self.draw_menu_animation()
             self.message_display("Ultimate Tic Tac Toe", pos=(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3),
                                  font='comicsansms', size=40, update=False)
 
-            self.button("Single Player", **MENU_BUTTON_POSITIONS[0],
+            self.button("Single Player", **MENU_BUTTON_PROPERTIES[0],
                         action=partial(self.game_loop, GameType.SINGLE_PLAYER))
-            self.button("Two Player",    **MENU_BUTTON_POSITIONS[1],
+            self.button("Two Player", **MENU_BUTTON_PROPERTIES[1],
                         action=partial(self.game_loop, GameType.MULTI_PLAYER))
-            self.button("Settings",      **MENU_BUTTON_POSITIONS[2], action=self.do_nothing)
-            self.button("Quit",          **MENU_BUTTON_POSITIONS[3], action=self.quit_game)
+            self.button("Settings", **MENU_BUTTON_PROPERTIES[2], action=self.do_nothing)
+            self.button("Quit", **MENU_BUTTON_PROPERTIES[3], action=self.quit_game)
 
             pygame.display.update()
-            self.clock.tick(15)
+            self.clock.tick(MENU_FRAMES_PER_SECOND)
 
 
 if __name__ == '__main__':
