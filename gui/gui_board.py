@@ -170,4 +170,3 @@ class GuiBoard:
 
     def draw_menu_animation(self):
         self.background.update()
-
