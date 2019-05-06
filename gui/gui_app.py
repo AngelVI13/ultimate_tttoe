@@ -31,8 +31,13 @@ class Gui(GuiBoard):
         self.clicked_cells.add(cell)
 
         move, board = cell.cell_idx, cell.board_idx
-        self.board.make_move(move, board)
+        self.board.make_move(board, move)
+        # print(board, move)
+        # print(self.board)
+        # print(self.board.playerJustMoved, self.board.nextBoard)
         self.allowed_cells = self.find_allowed_cells()
+        # print(self.allowed_cells)
+        # print()
 
         result = self.board.pos[board].get_result()
         if result is not None:
@@ -92,18 +97,25 @@ class Gui(GuiBoard):
         time.sleep(0.2)  # sleep 1s so output can be checked
 
     def get_best_engine_move(self):
-        print(uct_multi(self.board, itermax=10000, verbose=False))
+        return uct_multi(self.board, itermax=1000, verbose=False)
 
     def do_nothing(self):
         pass  # todo remove this later
 
     def get_game_input(self, game_type, mouse_pos):
         if game_type == GameType.SINGLE_PLAYER:
+            # self.click_random_cell() used for debugginh
             if self.board.playerJustMoved == PLAYER_O:  # X's turn  todo allow user to select side to play
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
             else:
-                self.click_random_cell()  # todo replace with AI
+                board, move = self.get_best_engine_move()
+                for cell in self.allowed_cells:
+                    if cell.board_idx == board and cell.cell_idx == move:
+                        self.subcell_clicked(cell)
+                        break
+                else:
+                    raise Exception('Wrong engine move (move not in allowed moves) ({}{})'.format(board, move))
 
         elif game_type == GameType.MULTI_PLAYER:
             if mouse_pos is not None:
@@ -147,7 +159,7 @@ class Gui(GuiBoard):
             self.draw_side_to_move(-self.board.playerJustMoved)
 
             pygame.display.update()
-            self.clock.tick(FRAMES_PER_SECOND)
+            self.clock.tick(GAME_FRAMES_PER_SECOND)
 
     def menu_loop(self):
         while True:
@@ -156,18 +168,19 @@ class Gui(GuiBoard):
                     self.quit_game()
 
             self.gameDisplay.fill(WHITE)
+            self.draw_menu_animation()
             self.message_display("Ultimate Tic Tac Toe", pos=(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3),
                                  font='comicsansms', size=40, update=False)
 
-            self.button("Single Player", **MENU_BUTTON_POSITIONS[0],
+            self.button("Single Player", **MENU_BUTTON_PROPERTIES[0],
                         action=partial(self.game_loop, GameType.SINGLE_PLAYER))
-            self.button("Two Player",    **MENU_BUTTON_POSITIONS[1],
+            self.button("Two Player", **MENU_BUTTON_PROPERTIES[1],
                         action=partial(self.game_loop, GameType.MULTI_PLAYER))
-            self.button("Settings",      **MENU_BUTTON_POSITIONS[2], action=self.do_nothing)
-            self.button("Quit",          **MENU_BUTTON_POSITIONS[3], action=self.quit_game)
+            self.button("Settings", **MENU_BUTTON_PROPERTIES[2], action=self.do_nothing)
+            self.button("Quit", **MENU_BUTTON_PROPERTIES[3], action=self.quit_game)
 
             pygame.display.update()
-            self.clock.tick(15)
+            self.clock.tick(MENU_FRAMES_PER_SECOND)
 
 
 if __name__ == '__main__':

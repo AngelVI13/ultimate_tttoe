@@ -3,6 +3,7 @@ from functools import total_ordering
 import pygame
 from gui.constants import *
 from board.ultimate_board import *
+from gui.menu_background import Background
 
 
 @total_ordering
@@ -20,9 +21,8 @@ class Cell:
         self.board_idx = board_idx
         self.cell_idx = cell_idx
 
-    def __repr__(self):
-        return '{name}(pos_x={x}, pos_y={y}, width={w}, height={h}, player={p})'.format(
-            name=self.__class__.__name__, x=self.pos_x, y=self.pos_y, w=self.width, h=self.height, p=self.player)
+    def __repr__(self):  # todo only used for debugging
+        return '{}(board={}, cell={})'.format(self.__class__.__name__, self.board_idx, self.cell_idx)
 
     def __hash__(self):
         return hash((self.pos_x, self.pos_y))
@@ -49,6 +49,7 @@ class GuiBoard:
         self.gameDisplay = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
         pygame.display.set_caption('Ultimate Tic Tac Toe')
         self.clock = pygame.time.Clock()
+        self.background = Background(self.gameDisplay)
 
     @staticmethod
     def get_text_objects(text, font):
@@ -166,3 +167,6 @@ class GuiBoard:
         pygame.draw.rect(self.gameDisplay, BLACK, (OFFSET_X+8, OFFSET_Y-22, 24, 14))
         pygame.draw.rect(self.gameDisplay, self.colors[player_to_move], (OFFSET_X+10, OFFSET_Y-20, 20, 10))
         self.message_display(text=' to move', pos=(OFFSET_X+60, OFFSET_Y-15), font='comicsansms', size=14)
+
+    def draw_menu_animation(self):
+        self.background.update()
