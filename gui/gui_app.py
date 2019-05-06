@@ -99,12 +99,8 @@ class Gui(GuiBoard):
     def get_best_engine_move(self):
         return uct_multi(self.board, itermax=1000, verbose=False)
 
-    def do_nothing(self):
-        pass  # todo remove this later
-
     def get_game_input(self, game_type, mouse_pos):
         if game_type == GameType.SINGLE_PLAYER:
-            # self.click_random_cell() used for debugginh
             if self.board.playerJustMoved == PLAYER_O:  # X's turn  todo allow user to select side to play
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
@@ -120,6 +116,18 @@ class Gui(GuiBoard):
         elif game_type == GameType.MULTI_PLAYER:
             if mouse_pos is not None:
                 self.click_cell_under_mouse(mouse_pos)
+
+        elif game_type == GameType.DEMO_MODE:
+            if self.board.playerJustMoved == PLAYER_O:
+                self.click_random_cell()
+            else:
+                board, move = self.get_best_engine_move()
+                for cell in self.allowed_cells:
+                    if cell.board_idx == board and cell.cell_idx == move:
+                        self.subcell_clicked(cell)
+                        break
+                else:
+                    raise Exception('Wrong engine move (move not in allowed moves) ({}{})'.format(board, move))
 
     def game_loop(self, game_type):
         pygame.event.clear(pygame.MOUSEBUTTONUP)  # clear all mouse clicks
@@ -176,7 +184,7 @@ class Gui(GuiBoard):
                         action=partial(self.game_loop, GameType.SINGLE_PLAYER))
             self.button("Two Player", **MENU_BUTTON_PROPERTIES[1],
                         action=partial(self.game_loop, GameType.MULTI_PLAYER))
-            self.button("Settings", **MENU_BUTTON_PROPERTIES[2], action=self.do_nothing)
+            self.button("Demo", **MENU_BUTTON_PROPERTIES[2], action=partial(self.game_loop, GameType.DEMO_MODE))
             self.button("Quit", **MENU_BUTTON_PROPERTIES[3], action=self.quit_game)
 
             pygame.display.update()

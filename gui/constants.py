@@ -21,6 +21,7 @@ Grid = IntEnum('Grid', zip([
 class GameType(Enum):
     SINGLE_PLAYER = auto()
     MULTI_PLAYER = auto()
+    DEMO_MODE = auto()
 
 
 BORDER_THICKNESS = 2
