@@ -25,7 +25,7 @@ class Gui(GuiBoard):
             return
 
         if cell not in self.allowed_cells:
-            return  # todo raise warning or display text
+            return
 
         cell.player = self.board.playerJustMoved * -1
         self.clicked_cells.add(cell)
