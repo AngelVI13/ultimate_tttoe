@@ -50,8 +50,9 @@ OFFSET_X, OFFSET_Y = (DISPLAY_WIDTH - BOARD_WIDTH) / 2, (DISPLAY_HEIGHT - BOARD_
 # Menu buttons
 BUTTON_WIDTH, BUTTON_HEIGHT = 300, 50
 BUTTON_Y_SPACING = 1.5
+BUTTON_X_SPACING = 0.5
 
-MENU_BUTTON_PROPERTIES = {
+MENU_BUTTON_PROPERTIES = {  # todo add names instead of integers as keys
     0: {'x': (DISPLAY_WIDTH-BUTTON_WIDTH) / 2, 'y': (DISPLAY_HEIGHT / 3) + 1*BUTTON_HEIGHT*BUTTON_Y_SPACING,
         'w': BUTTON_WIDTH, 'h': BUTTON_HEIGHT, 'ic': PURPLE, 'ac': PURPLE_HIGHLIGHT},
     1: {'x': (DISPLAY_WIDTH-BUTTON_WIDTH) / 2, 'y': (DISPLAY_HEIGHT / 3) + 2*BUTTON_HEIGHT*BUTTON_Y_SPACING,
@@ -109,3 +110,14 @@ MENU_FRAMES_PER_SECOND = 30
 # after entering game loop pause for some time before allowing the user to click
 # fixes issues with accidental clicks
 PAUSE_BEFORE_USER_INPUT = 1
+
+COLOR_BOX_SIZE = 20
+COLOR_BOX_BORDER_THICKNESS = 2
+
+OVERLAY_W, OVERLAY_H = 140, 80
+RESULT_OVERLAY = {
+    'x': DISPLAY_WIDTH / 2 - OVERLAY_W / 2,
+    'y': DISPLAY_HEIGHT / 2 - OVERLAY_H / 2,
+    'w': OVERLAY_W,
+    'h': OVERLAY_H
+}

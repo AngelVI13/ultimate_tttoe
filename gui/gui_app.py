@@ -32,12 +32,7 @@ class Gui(GuiBoard):
 
         move, board = cell.cell_idx, cell.board_idx
         self.board.make_move(board, move)
-        # print(board, move)
-        # print(self.board)
-        # print(self.board.playerJustMoved, self.board.nextBoard)
         self.allowed_cells = self.find_allowed_cells()
-        # print(self.allowed_cells)
-        # print()
 
         result = self.board.pos[board].get_result()
         if result is not None:
@@ -75,29 +70,45 @@ class Gui(GuiBoard):
 
     def check_for_game_over(self):
         result = self.board.get_result(player_jm=PLAYER_X)
-        if result is not None:
-            self.message_display(text=RESULT_TEXT[result])
-            self.message_display(text='Click anywhere to continue...',
-                                 pos=(DISPLAY_WIDTH / 2, (BOARD_HEIGHT + OFFSET_Y + 30)), font='comicsansms', size=20)
+        if result is None:
+            return False  # game not over
 
-            # Wait until a mouse click before going back to main menu
-            clicked = False
-            while not clicked:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.quit_game()
-                    elif event.type == pygame.MOUSEBUTTONUP:
-                        clicked = True
-            return True  # game is over
-        return False  # game not over
+        self.message_display(text='Click anywhere to continue...',
+                             pos=(DISPLAY_WIDTH / 2, (BOARD_HEIGHT + OFFSET_Y + 30)),
+                             size=25, update=False)
+
+        # draw transparent overlay
+        s = pygame.Surface((RESULT_OVERLAY['w'], RESULT_OVERLAY['h']), pygame.SRCALPHA)  # per-pixel alpha
+        s.fill((0x7b, 0x81, 0x89, 200))  # notice the alpha value in the color
+        self.gameDisplay.blit(s, (RESULT_OVERLAY['x'], RESULT_OVERLAY['y']))
+
+        if self.winner_mark[result] is not None:
+            self.draw_color_box(border_color=BLACK, border_thickness=COLOR_BOX_BORDER_THICKNESS,
+                                inner_color=self.winner_mark[result],
+                                coords=(DISPLAY_WIDTH / 2 - OVERLAY_W / 2 + COLOR_BOX_SIZE,
+                                        DISPLAY_HEIGHT / 2 - COLOR_BOX_SIZE / 2),
+                                size=(COLOR_BOX_SIZE, COLOR_BOX_SIZE))
+            self.message_display(text='Wins!', pos=(DISPLAY_WIDTH / 2 + 0.5 * COLOR_BOX_SIZE, DISPLAY_HEIGHT / 2),
+                                 size=40, update=False)
+        else:
+            self.message_display(text='Tie!', size=40, update=False)
+
+        pygame.display.update()
+
+        # Wait until a mouse click before going back to main menu
+        clicked = False
+        while not clicked:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.quit_game()
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    clicked = True
+        return True  # game is over
 
     def click_random_cell(self):
         random_cell = random.choice(list(self.allowed_cells))
         self.subcell_clicked(random_cell)
         time.sleep(0.2)  # sleep 1s so output can be checked
-
-    def get_best_engine_move(self):
-        return uct_multi(self.board, itermax=1000, verbose=False)
 
     def get_game_input(self, game_type, mouse_pos):
         if game_type == GameType.SINGLE_PLAYER:
@@ -105,7 +116,7 @@ class Gui(GuiBoard):
                 if mouse_pos is not None:
                     self.click_cell_under_mouse(mouse_pos)
             else:
-                board, move = self.get_best_engine_move()
+                board, move = uct_multi(self.board, itermax=1000, verbose=False)
                 for cell in self.allowed_cells:
                     if cell.board_idx == board and cell.cell_idx == move:
                         self.subcell_clicked(cell)
@@ -118,16 +129,17 @@ class Gui(GuiBoard):
                 self.click_cell_under_mouse(mouse_pos)
 
         elif game_type == GameType.DEMO_MODE:
-            if self.board.playerJustMoved == PLAYER_O:
-                self.click_random_cell()
-            else:
-                board, move = self.get_best_engine_move()
-                for cell in self.allowed_cells:
-                    if cell.board_idx == board and cell.cell_idx == move:
-                        self.subcell_clicked(cell)
-                        break
-                else:
-                    raise Exception('Wrong engine move (move not in allowed moves) ({}{})'.format(board, move))
+            self.click_random_cell()
+            # if self.board.playerJustMoved == PLAYER_O:
+            #     self.click_random_cell()
+            # else:
+            #     board, move = uct_multi(self.board, itermax=400, verbose=False)
+            #     for cell in self.allowed_cells:
+            #         if cell.board_idx == board and cell.cell_idx == move:
+            #             self.subcell_clicked(cell)
+            #             break
+            #     else:
+            #         raise Exception('Wrong engine move (move not in allowed moves) ({}{})'.format(board, move))
 
     def game_loop(self, game_type):
         pygame.event.clear(pygame.MOUSEBUTTONUP)  # clear all mouse clicks

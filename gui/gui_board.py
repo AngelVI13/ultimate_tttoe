@@ -39,6 +39,12 @@ class GuiBoard:
         PLAYER_X: RED,
         PLAYER_O: BLUE,
     }
+    # from the viewpoint of PLAYER_X
+    winner_mark = {
+        WIN: colors[PLAYER_X],
+        DRAW: None,
+        LOSS: colors[PLAYER_O],
+    }
 
     clicked_cells = set()  # a set of all clicked cells
     all_cells = set()  # a set of all created cells
@@ -166,7 +172,16 @@ class GuiBoard:
         # todo remove magic numbers
         pygame.draw.rect(self.gameDisplay, BLACK, (OFFSET_X+8, OFFSET_Y-22, 24, 14))
         pygame.draw.rect(self.gameDisplay, self.colors[player_to_move], (OFFSET_X+10, OFFSET_Y-20, 20, 10))
-        self.message_display(text=' to move', pos=(OFFSET_X+60, OFFSET_Y-15), font='comicsansms', size=14)
+        self.message_display(text=' to move', pos=(OFFSET_X+55, OFFSET_Y-15), font='comicsansms', size=16)
 
     def draw_menu_animation(self):
         self.background.update()
+
+    def draw_color_box(self, border_color, border_thickness, inner_color, coords, size):
+        """Coords: (x, y); Size (w, h)"""
+        x, y = coords  # todo pass these as named tuples
+        w, h = size
+        # (OFFSET_X + 8, OFFSET_Y - 22, 24, 14)
+        pygame.draw.rect(self.gameDisplay, border_color, (x, y, w, h))
+        pygame.draw.rect(self.gameDisplay, inner_color,
+                         (x+border_thickness, y+border_thickness, w-2*border_thickness, h-2*border_thickness))
