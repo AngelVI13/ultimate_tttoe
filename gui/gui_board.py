@@ -68,7 +68,7 @@ class GuiBoard:
         else:
             pos_x, pos_y = pos
 
-        large_text = pygame.font.SysFont(font, size)
+        large_text = pygame.font.SysFont(font, size * DISPLAY_SCALING)
         text_surf, text_rect = self.get_text_objects(text, large_text)
         text_rect.center = (pos_x, pos_y)
         self.gameDisplay.blit(text_surf, text_rect)
@@ -88,7 +88,7 @@ class GuiBoard:
         else:
             pygame.draw.rect(self.gameDisplay, ic, (x, y, w, h))
 
-        small_text = pygame.font.SysFont("comicsansms", 20)
+        small_text = pygame.font.SysFont("comicsansms", 20 * DISPLAY_SCALING)
         text_surf, text_rect = self.get_text_objects(msg, small_text)
         text_rect.center = ((x + (w / 2)), (y + (h / 2)))
         self.gameDisplay.blit(text_surf, text_rect)

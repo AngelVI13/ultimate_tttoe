@@ -28,7 +28,7 @@ class Background:
         y_increment.extend([random.randrange(2, 5) for _ in range(self.num_animations // 2)])
         self.animations = []
         for x, y, increment_x, increment_y in zip(x_coords, y_coords, x_increment, y_increment):
-            hashtag_img = pygame.image.load('../media/hashtag_1.png')
+            hashtag_img = pygame.image.load('./media/hashtag_1.png')
             self.animations.append(Animation(img=hashtag_img, x=x, y=y,
                                              x_increment=increment_x, y_increment=increment_y))
 
